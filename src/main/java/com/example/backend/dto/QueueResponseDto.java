@@ -6,16 +6,22 @@ public class QueueResponseDto {
     private String name;
     private int tokenNumber;
     private Status status;
+    private boolean isVip;
 
     public QueueResponseDto(){
 
     }
+
     
-    public QueueResponseDto(String name, Status status, int tokenNumber) {
+    public QueueResponseDto(boolean isVip, String name, Status status, int tokenNumber) {
+        this.isVip = isVip;
         this.name = name;
         this.status = status;
         this.tokenNumber = tokenNumber;
     }
+    
+
+    
 
     public String getName() {
         return name;
@@ -39,6 +45,14 @@ public class QueueResponseDto {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public boolean isIsVip() {
+        return isVip;
+    }
+
+    public void setIsVip(boolean isVip) {
+        this.isVip = isVip;
     }
 
     

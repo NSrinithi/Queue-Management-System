@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.backend.dto.PositionResponseDto;
 import com.example.backend.dto.QueueRequestdto;
+import com.example.backend.dto.QueueResponseDto;
 import com.example.backend.entity.QueueEntry;
 import com.example.backend.service.QueueService;
 
@@ -31,9 +33,10 @@ public class QueueController {
     
     
     @PostMapping("/join")
-    public QueueEntry  addQueu(@RequestBody QueueRequestdto request) {
+    public QueueResponseDto  addQueu(@RequestBody QueueRequestdto request) {
         return qs.addQueue(request.getName(),request.isIsVip());
     }
+
 
     @GetMapping("/get")
     public List<QueueEntry> getQueue() {
@@ -51,10 +54,11 @@ public class QueueController {
     }
     
     @GetMapping("/position")
-    public int getPosition(@RequestParam Long id) {
+    public PositionResponseDto getPosition(@RequestParam Long id) {
         return qs.getPosition(id);
     }
 
+    
     @DeleteMapping("/cancel")
     public void delete(@RequestParam Long id){
         qs.cancel(id);
