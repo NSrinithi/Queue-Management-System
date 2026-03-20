@@ -147,4 +147,4 @@ This makes Redis ideal for real-time queue systems.
 ## 🙋‍♂️ Author
 
 Srinithi N
-Backend Developer | Java | Spring Boot | Redis
+| Backend Developer | Java | Spring Boot | Redis
