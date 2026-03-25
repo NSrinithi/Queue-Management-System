@@ -9,6 +9,9 @@ import com.example.backend.dto.PositionResponseDto;
 import com.example.backend.dto.QueueResponseDto;
 import com.example.backend.entity.QueueEntry;
 import com.example.backend.entity.Status;
+import com.example.backend.exception.InvalidInputException;
+import com.example.backend.exception.QueueEmptyException;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.repo.QueueRepo;
 
 
@@ -29,6 +32,9 @@ public class QueueService {
     
 
     public QueueResponseDto addQueue(String name,boolean isVip){
+        if(name==null){
+            throw new InvalidInputException("Name cannot be empty or null");
+        }
         QueueEntry queue=new QueueEntry();
         queue.setName(name);
         queue.setStatus(Status.WAITING);
@@ -52,27 +58,29 @@ public class QueueService {
     }
 
    
-    public List<QueueEntry> getAllQueue(){
-        return qr.findAll();
+    public List<QueueResponseDto> getAllQueue(){
+        return qr.findAll().stream().map(x->new QueueResponseDto(x.isIsVip(),x.getName(),x.getStatus(),x.getTokenNumber())).toList();
     }
 
-    public QueueEntry callNext(){
+    public QueueResponseDto callNext(){
         QueueEntry current=qr.findFirstByStatusOrderByIdAsc(Status.SERVING);
         if(current!=null){
             current.setStatus(Status.COMPLETED);
             qr.save(current);
         }
         Object val=redis.opsForList().leftPop(QUEUE_KEY);
-        if(val==null) throw new RuntimeException("Queue is empty");
+        if(val==null) throw new QueueEmptyException("Queue is empty");
         Long id=Long.parseLong(val.toString());
-        QueueEntry next=qr.findById(id).orElse(null);
-        if(next==null) return null;
+        QueueEntry next=qr.findById(id).orElseThrow(()->new ResourceNotFoundException("User Not Found"));
         next.setStatus(Status.SERVING);
-        return qr.save(next);
+        QueueEntry res=qr.save(next);
+        return new QueueResponseDto(res.isIsVip(), res.getName(), res.getStatus(),res.getTokenNumber());
     }
 
-    public QueueEntry current(){
-        return qr.findFirstByStatusOrderByIdAsc(Status.SERVING);
+    public QueueResponseDto current(){
+        QueueEntry queu=qr.findFirstByStatusOrderByIdAsc(Status.SERVING);
+        if(queu==null) throw new ResourceNotFoundException("There is no person");
+        return new QueueResponseDto(queu.isIsVip(), queu.getName(), queu.getStatus(),queu.getTokenNumber());
     }
 
     public PositionResponseDto getPosition(Long id){
@@ -87,7 +95,7 @@ public class QueueService {
             }
         }
         if(position == 0){
-            throw new RuntimeException("User not found in queue");
+            throw new ResourceNotFoundException("User not found in queue");
         }
         int time=(position-1)*TIME_PER_PERSON;
         return new PositionResponseDto(position, time);
@@ -95,8 +103,9 @@ public class QueueService {
 
 
     public void cancel(Long id){
+        if(id==null) throw new InvalidInputException("Id cannot be null or empty");
         Long removed=redis.opsForList().remove(QUEUE_KEY,1, id);
-        if(removed==0) throw new RuntimeException("User is not found in queue");
+        if(removed==0) throw new ResourceNotFoundException("User is not found in queue");
         QueueEntry delete=qr.findById(id).orElse(null);
         if(delete!=null){
             delete.setStatus(Status.COMPLETED);

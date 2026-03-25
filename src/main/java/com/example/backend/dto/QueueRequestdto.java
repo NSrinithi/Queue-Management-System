@@ -1,8 +1,12 @@
 package com.example.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class QueueRequestdto {
     
+    @NotBlank(message="Name cannot be null or empty")
     private String name;
+
 
     private boolean isVip;
 

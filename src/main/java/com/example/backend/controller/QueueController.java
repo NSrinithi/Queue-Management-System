@@ -3,6 +3,7 @@ package com.example.backend.controller;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,8 @@ import com.example.backend.dto.QueueResponseDto;
 import com.example.backend.entity.QueueEntry;
 import com.example.backend.service.QueueService;
 
+import jakarta.validation.Valid;
+
 
 
 
@@ -30,38 +33,39 @@ public class QueueController {
         this.qs = qs;
     }
 
-    
-    
+
+   
     @PostMapping("/join")
-    public QueueResponseDto  addQueu(@RequestBody QueueRequestdto request) {
-        return qs.addQueue(request.getName(),request.isIsVip());
+    public ResponseEntity<QueueResponseDto>  addQueue(@Valid @RequestBody QueueRequestdto request) {
+        return ResponseEntity.status(201).body(qs.addQueue(request.getName(),request.isIsVip()));
     }
 
 
     @GetMapping("/get")
-    public List<QueueEntry> getQueue() {
-        return qs.getAllQueue();
+    public ResponseEntity<List<QueueResponseDto>> getQueue() {
+        return ResponseEntity.status(200).body(qs.getAllQueue());
     }
 
     @GetMapping("/next")
-    public QueueEntry callNext() {
-        return qs.callNext();
+    public ResponseEntity<QueueResponseDto> callNext() {
+        return ResponseEntity.status(200).body(qs.callNext());
     }
 
     @GetMapping("/current")
-    public QueueEntry getCurrent() {
-        return qs.current();
+    public ResponseEntity<QueueResponseDto> getCurrent() {
+        return ResponseEntity.status(200).body(qs.current());
     }
     
     @GetMapping("/position")
-    public PositionResponseDto getPosition(@RequestParam Long id) {
-        return qs.getPosition(id);
+    public ResponseEntity<PositionResponseDto> getPosition(@RequestParam Long id) {
+        return ResponseEntity.status(200).body(qs.getPosition(id));
     }
 
     
     @DeleteMapping("/cancel")
-    public void delete(@RequestParam Long id){
+    public ResponseEntity<Void> delete(@RequestParam Long id){
         qs.cancel(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/testRedius")
