@@ -1,71 +1,81 @@
 # 🚦 Smart Queue Management System (Backend)
 
-> 🚀 A backend system designed to manage real-time queues efficiently using Redis, with support for priority handling and estimated waiting time.
----
-
-## 📌 Problem Statement
-
-Traditional queue systems rely heavily on databases, which become inefficient under high-frequency operations. 
-This project solves that by using Redis for in-memory queue handling, enabling fast and scalable real-time queue processing.
+> 🚀 A production-oriented backend system for real-time queue management using **Redis + MySQL**, with priority handling, testing, and Dockerized deployment.
 
 ---
 
-## 🔥 Features
+## 📌 Overview
 
-* ⚡ Real-time queue handling using Redis
-* 🧑‍💼 Priority queue (VIP users handled first)
-* ⏱ Estimated waiting time calculation
+This project implements a **high-performance queue management system** designed to handle real-time operations efficiently.
+
+Instead of relying solely on traditional databases, it uses **Redis (in-memory)** for fast queue operations and **MySQL** for persistence — achieving both **speed and reliability**.
+
+---
+
+## 🔥 Key Features
+
+* ⚡ Real-time queue operations using Redis
+* 🧑‍💼 VIP priority handling (priority queue logic)
+* ⏱ Dynamic waiting time estimation
 * 🔄 FIFO queue management
-* ❌ Cancel queue entry
-* 📍 Get position in queue
-* 📊 Persistent storage using MySQL
-* 🧾 Clean REST APIs
+* ❌ Cancel queue entries
+* 📍 Get real-time queue position
+* 📊 Persistent storage with MySQL
+* 🧾 Clean RESTful APIs
+* 🧪 Comprehensive testing (Unit + Controller + Integration)
+* 🐳 Fully Dockerized (App + MySQL + Redis)
 
 ---
 
 ## 🛠 Tech Stack
 
-* **Backend:** Java, Spring Boot
-* **Database:** MySQL
-* **Cache / Queue:** Redis
-* **ORM:** JPA (Hibernate)
+| Layer       | Technology                |
+| ----------- | ------------------------- |
+| Backend     | Java, Spring Boot         |
+| Database    | MySQL                     |
+| Cache/Queue | Redis                     |
+| ORM         | JPA (Hibernate)           |
+| Testing     | JUnit 5, Mockito, MockMvc |
+| DevOps      | Docker, Docker Compose    |
 
 ---
 
-## 🏗 System Design
+## 🏗 Architecture
 
-- Redis is used as the primary queue for real-time operations
-- MySQL is used for persistent storage and data recovery
-- Queue operations (add, next, position) are handled in Redis
-- Database is updated only for status tracking (WAITING, SERVING, COMPLETED)
+```
+Client
+   ↓
+Spring Boot Application
+   ↓
+-----------------------------
+| Redis (Queue Operations)  |
+| MySQL (Persistent Data)   |
+-----------------------------
+```
+
+### ⚙️ Design Decisions
+
+* **Redis** → Handles queue operations (O(1) push/pop)
+* **MySQL** → Stores user data & status (WAITING, SERVING, COMPLETED)
+* **Hybrid approach** ensures:
+
+  * High performance (Redis)
+  * Data safety (MySQL)
 
 ---
 
-## 💡 Key Concepts Implemented
+## 🔄 System Flow
 
-* Redis List operations (`leftPush`, `rightPush`, `leftPop`)
-* FIFO queue design
-* Priority handling using Redis
-* Backend + cache (DB + Redis) hybrid architecture
-* Real-time position tracking
-* Business logic for waiting time estimation
-
----
-
-## ⚙️ How It Works
-
-* Users are added to a queue (VIP or normal)
-* VIP users are pushed to the front of the queue
-* Normal users are added to the end (FIFO)
-* Redis maintains the queue for fast operations
-* MySQL stores data for persistence
-* Position and waiting time are calculated dynamically
+1. User joins queue (VIP / Normal)
+2. VIP → added to front (`leftPush`)
+3. Normal → added to end (`rightPush`)
+4. Redis maintains queue order
+5. MySQL tracks user status
+6. System calculates position & waiting time dynamically
 
 ---
 
 ## ⏱ Waiting Time Logic
-
-Estimated time is calculated as:
 
 ```
 Estimated Time = (Position - 1) × Time per person
@@ -75,76 +85,155 @@ Estimated Time = (Position - 1) × Time per person
 
 ---
 
-## 📡 Sample APIs
+## 🧪 Testing Strategy
+
+Implemented a **multi-layered testing approach**:
+
+### ✅ Unit Testing (Service Layer)
+
+* JUnit 5 + Mockito
+* Mocked:
+
+  * Repository
+  * RedisTemplate
+* Covered:
+
+  * Success scenarios
+  * Failure cases (DB down, Redis failure)
+  * Edge cases (null input, empty queue)
+
+### ✅ Advanced Testing Techniques
+
+* `ArgumentCaptor` → verify DB data
+* `InOrder` → verify execution flow
+* `verifyNoInteractions` → strict validation
+
+### ✅ Controller Testing
+
+* MockMvc for API testing
+* Verified:
+
+  * HTTP status codes
+  * JSON responses
+  * Exception handling
+
+### ✅ Integration Testing
+
+* `@SpringBootTest` full flow testing
+* Simulated Redis behavior for queue operations
+
+---
+
+## 🐳 Docker Setup
+
+### 🔧 Dockerfile
+
+* Multi-stage build (Maven + lightweight runtime)
+* Optimized image size
+* Production-ready setup
+
+### 🧩 Docker Compose
+
+Runs entire system with one command:
+
+* Spring Boot App
+* MySQL
+* Redis
+
+```bash
+docker compose up
+```
+
+### Key Features:
+
+* Service-based networking (`mysql`, `redis`)
+* Health checks for DB readiness
+* Volume support for persistence
+
+---
+
+## 📡 API Endpoints
 
 ### ➕ Add to Queue
 
-POST /queue?name=John&isVip=false
-
----
+```
+POST /queue/join
+```
 
 ### ▶ Call Next
 
-POST /queue/call-next
-
----
+```
+GET /queue/next
+```
 
 ### 📍 Get Position
 
-GET /queue/position/{id}
-
----
+```
+GET /queue/position?id={id}
+```
 
 ### ❌ Cancel Entry
 
-DELETE /queue/{id}
+```
+DELETE /queue/cancel?id={id}
+```
+
+### 👤 Current User
+
+```
+GET /queue/current
+```
 
 ---
 
-### 📋 Get All Queue
+## 🚀 How to Run
 
-GET /queue
+### 🟢 Using Docker (Recommended)
 
----
-
-### 🧹 Clear Queue
-
-DELETE /queue/clear
+```bash
+docker compose up
+```
 
 ---
 
-## 🚀 Future Improvements
+### 🟡 Local Setup
 
-* Distributed queue handling
-* Redis persistence (RDB/AOF)
-* Notification system (SMS/Email)
-* Admin dashboard
+1. Start MySQL & Redis
+2. Run Spring Boot app:
+
+```bash
+mvn spring-boot:run
+```
 
 ---
 
-## ❓ Why Redis?
+## 💡 Why Redis?
 
-Using a database for queue operations leads to high latency and increased load under heavy traffic.
+Traditional DB-based queues:
+
+* ❌ Slow under high load
+* ❌ High latency
 
 Redis provides:
-- In-memory storage → faster access
-- O(1) push/pop operations
-- Efficient handling of high-frequency queue operations
 
-This makes Redis ideal for real-time queue systems.
+* ✅ In-memory operations → ultra-fast
+* ✅ O(1) push/pop
+* ✅ Ideal for real-time systems
 
 ---
 
-## 💡 Key Learnings
+## 🔥 Key Engineering Highlights
 
-* Implemented real-time queue system using Redis
-* Understood difference between in-memory and persistent storage
-* Designed backend system with priority handling
-* Applied business logic for real-world scenarios
+* Hybrid architecture (Redis + DB)
+* Real-time system design
+* Failure scenario handling
+* Layered testing strategy
+* Dockerized full-stack setup
+* Debugging real-world issues
 
 ---
 
 ## 🙋‍♂️ Author
 
-Srinithi N
-| Backend Developer | Java | Spring Boot | Redis
+**Srinithi N**
+Backend Developer | Java | Spring Boot | Redis
