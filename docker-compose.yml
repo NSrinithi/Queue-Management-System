@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: queue-mysql
+    env_file:
+      - .env
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: myapp:1.0
+    container_name: queue-app
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: on-failure
+
+  redis:
+    image: redis:7
+    container_name: queue-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  mysql-data:
