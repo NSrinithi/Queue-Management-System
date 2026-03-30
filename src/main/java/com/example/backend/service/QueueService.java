@@ -14,6 +14,8 @@ import com.example.backend.exception.QueueEmptyException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.repo.QueueRepo;
 
+import jakarta.transaction.Transactional;
+
 
 @Service
 public class QueueService {
@@ -29,8 +31,8 @@ public class QueueService {
         this.redis = redis;
     }
 
-    
 
+    @Transactional
     public QueueResponseDto addQueue(String name,boolean isVip){
         if(name==null){
             throw new InvalidInputException("Name cannot be empty or null");
